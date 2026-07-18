@@ -1,0 +1,36 @@
+{
+  "name": "tallo-planning-fe",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@vueuse/core": "^14.3.0",
+    "axios": "^1.18.1",
+    "date-fns": "^4.4.0",
+    "dompurify": "^3.4.12",
+    "lucide-vue-next": "^1.0.0",
+    "markdown-it": "^14.3.0",
+    "pinia": "^3.0.4",
+    "vue": "^3.5.39",
+    "vue-router": "^4.6.4",
+    "vue-sonner": "^2.0.9",
+    "vuedraggable": "^4.1.0"
+  },
+  "devDependencies": {
+    "@lucide/vue": "^1.24.0",
+    "@tailwindcss/vite": "^4.3.2",
+    "@types/markdown-it": "^14.1.2",
+    "@types/node": "^24.13.3",
+    "@vitejs/plugin-vue": "^6.0.7",
+    "@vue/tsconfig": "^0.9.1",
+    "tailwindcss": "^4.3.2",
+    "typescript": "~6.0.2",
+    "vite": "^8.1.1",
+    "vue-tsc": "^3.3.5"
+  }
+}
