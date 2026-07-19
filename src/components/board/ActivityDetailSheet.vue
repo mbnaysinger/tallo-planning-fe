@@ -11,7 +11,7 @@ import { renderMarkdown } from '@/lib/markdown'
 const props = defineProps<{
   modelValue: boolean
   activity: Activity | null
-  isAdmin: boolean
+  canManage: boolean // ADMIN em qualquer raia; USER-FULL na própria
 }>()
 
 const emit = defineEmits<{
@@ -90,14 +90,14 @@ const description = computed(() =>
           <Pencil class="h-4 w-4" /> Editar
         </button>
         <button
-          v-if="isAdmin"
+          v-if="canManage"
           class="flex min-h-11 items-center justify-center gap-2 rounded-md bg-muted px-3 text-sm font-medium transition-colors hover:bg-accent"
           @click="emit('clone')"
         >
           <Copy class="h-4 w-4" /> Clonar
         </button>
         <button
-          v-if="isAdmin"
+          v-if="canManage"
           class="flex min-h-11 items-center justify-center gap-2 rounded-md bg-destructive/10 px-3 text-sm font-medium text-destructive transition-colors hover:bg-destructive hover:text-white"
           @click="emit('delete')"
         >

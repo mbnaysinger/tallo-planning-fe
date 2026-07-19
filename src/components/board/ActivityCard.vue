@@ -7,7 +7,7 @@ import { stripMarkdown } from '@/lib/markdown'
 
 const props = defineProps<{
   activity: Activity
-  isAdmin: boolean
+  canManage: boolean // ADMIN em qualquer raia; USER-FULL na própria
 }>()
 
 const emit = defineEmits<{
@@ -65,21 +65,23 @@ const descriptionPreview = computed(() =>
       @click.stop
     >
       <button
-        class="rounded-full bg-success p-1.5 text-white shadow hover:brightness-110"
-        title="Marcar como concluída"
+        class="rounded-full p-1.5 shadow hover:brightness-110"
+        :class="activity.status === 'concluida' ? 'bg-success text-white ring-2 ring-success/50' : 'bg-muted text-muted-foreground hover:bg-success hover:text-white'"
+        :title="activity.status === 'concluida' ? 'Desfazer conclusão' : 'Marcar como concluída'"
         @click="emit('status', 'concluida')"
       >
         <ThumbsUp class="h-3.5 w-3.5" />
       </button>
       <button
-        class="rounded-full bg-muted p-1.5 text-muted-foreground shadow hover:bg-destructive hover:text-white"
-        title="Marcar como não realizada"
+        class="rounded-full p-1.5 shadow hover:brightness-110"
+        :class="activity.status === 'nao_realizada' ? 'bg-destructive text-white ring-2 ring-destructive/50' : 'bg-muted text-muted-foreground hover:bg-destructive hover:text-white'"
+        :title="activity.status === 'nao_realizada' ? 'Desfazer marcação' : 'Marcar como não realizada'"
         @click="emit('status', 'nao_realizada')"
       >
         <ThumbsDown class="h-3.5 w-3.5" />
       </button>
       <button
-        v-if="isAdmin"
+        v-if="canManage"
         class="rounded-full bg-muted p-1.5 text-muted-foreground shadow hover:bg-primary hover:text-primary-foreground"
         title="Clonar atividade"
         @click="emit('clone')"

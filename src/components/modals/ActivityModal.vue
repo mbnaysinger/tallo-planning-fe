@@ -16,7 +16,8 @@ const props = defineProps<{
   mode: 'create' | 'edit'
   activity?: Activity | null
   initialDate?: string
-  isAdmin: boolean
+  isAdmin: boolean // habilita colaboradores (criar para terceiros é exclusivo do ADMIN)
+  canFullEdit: boolean // ADMIN/USER-FULL: tipo/projeto editáveis e data sem trava de semana
   persons: Person[]
   projects: Project[]
   isSaving?: boolean
@@ -78,7 +79,7 @@ watch(
 )
 
 const isProjectType = computed(() => form.type === 'Projeto')
-const typeLocked = computed(() => props.mode === 'edit' && !props.isAdmin)
+const typeLocked = computed(() => props.mode === 'edit' && !props.canFullEdit)
 const title = computed(() => (props.mode === 'create' ? 'Nova Atividade' : 'Editar Atividade'))
 
 function validate(): boolean {
@@ -124,7 +125,7 @@ function submit() {
             :class="errors.date ? 'border-destructive focus-visible:ring-destructive/50' : 'border-input focus-visible:ring-primary/50'"
           />
           <p v-if="errors.date" class="text-sm font-medium text-destructive">{{ errors.date }}</p>
-          <p v-else-if="!isAdmin && mode === 'edit'" class="text-xs text-muted-foreground">
+          <p v-else-if="!canFullEdit && mode === 'edit'" class="text-xs text-muted-foreground">
             Você pode mover apenas dentro da própria semana.
           </p>
         </div>

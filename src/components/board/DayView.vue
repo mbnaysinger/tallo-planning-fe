@@ -16,6 +16,7 @@ const props = defineProps<{
   selectedDate: string
   selectedPersonId: string
   isAdmin: boolean
+  canManage: boolean
 }>()
 
 const emit = defineEmits<{
@@ -86,7 +87,7 @@ function onTouchEnd(event: TouchEvent) {
           <p class="text-xs capitalize text-muted-foreground">{{ dayLabel }}</p>
         </div>
         <button
-          v-if="isAdmin"
+          v-if="canManage"
           class="flex min-h-11 min-w-11 items-center justify-center rounded-full border border-primary text-primary"
           title="Revisão da Semana"
           @click="emit('review')"
@@ -135,7 +136,7 @@ function onTouchEnd(event: TouchEvent) {
         v-for="activity in activities"
         :key="activity.id"
         :activity="activity"
-        :is-admin="isAdmin"
+        :can-manage="canManage"
         @open="emit('open', activity)"
       />
       <p v-if="!activities.length" class="py-8 text-center text-sm text-muted-foreground">

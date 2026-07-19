@@ -12,7 +12,7 @@ const props = defineProps<{
   date: string // YYYY-MM-DD
   activities: Activity[]
   totals?: DayTotals
-  isAdmin: boolean
+  canManage: boolean
   canDrag: boolean
 }>()
 
@@ -81,7 +81,7 @@ function onChange(event: DragChangeEvent) {
       <template #item="{ element }">
         <ActivityCard
           :activity="element"
-          :is-admin="isAdmin"
+          :can-manage="canManage"
           @open="emit('open', element)"
           @status="(s) => emit('status', element, s)"
           @clone="emit('clone', element)"

@@ -106,15 +106,17 @@ async function submitActivity(payload: Partial<Activity> & { collaborator_ids?: 
   isSaving.value = true
   const ok =
     modalMode.value === 'create'
-      ? await board.createActivity({ ...payload, person_id: modalContext.value.personId })
-      : await board.updateActivity(modalActivity.value!.id, payload)
+      ? await board.createActivity({ ...payload, person_id: modalContext.value.personId || auth.personId })
+      : await board.updateActivity(modalActivity.value!.id, { ...payload, person_id: modalActivity.value!.person_id })
   isSaving.value = false
   if (ok) showActivityModal.value = false
 }
 
 async function changeStatus(activity: Activity, status: Activity['status']) {
   showDetail.value = false
-  await board.updateStatus(activity.id, status)
+  // Clicar no status já ativo desfaz a marcação (volta para planejada)
+  const next = activity.status === status ? 'planejada' : status
+  await board.updateStatus(activity.id, next)
 }
 
 async function cloneActivity(activity: Activity) {
@@ -194,7 +196,7 @@ onMounted(async () => {
           :key="lane.person.id"
           :lane="lane"
           :anchor-date="board.anchorDate"
-          :is-admin="auth.isAdmin"
+          :can-manage="auth.canManage"
           :can-drag="true"
           @add="(date) => openCreate(lane.person.id, date)"
           @open="openDetail"
@@ -217,6 +219,7 @@ onMounted(async () => {
           :selected-date="selectedDate"
           :selected-person-id="selectedPersonId"
           :is-admin="auth.isAdmin"
+          :can-manage="auth.canManage"
           @select-date="selectedDate = $event"
           @select-person="selectedPersonId = $event"
           @shift-week="shiftWeekFromDay"
@@ -231,7 +234,7 @@ onMounted(async () => {
     <ActivityDetailSheet
       v-model="showDetail"
       :activity="detailActivity"
-      :is-admin="auth.isAdmin"
+      :can-manage="auth.canManage"
       @status="(s) => detailActivity && changeStatus(detailActivity, s)"
       @edit="detailActivity && openEdit(detailActivity)"
       @clone="detailActivity && cloneActivity(detailActivity)"
@@ -244,6 +247,7 @@ onMounted(async () => {
       :activity="modalActivity"
       :initial-date="modalContext.date"
       :is-admin="auth.isAdmin"
+      :can-full-edit="auth.canManage"
       :persons="collaboratorOptions"
       :projects="projects"
       :is-saving="isSaving"

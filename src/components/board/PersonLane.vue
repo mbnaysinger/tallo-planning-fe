@@ -7,7 +7,7 @@ import DayColumn from './DayColumn.vue'
 const props = defineProps<{
   lane: BoardLane
   anchorDate: Date
-  isAdmin: boolean
+  canManage: boolean
   canDrag: boolean
 }>()
 
@@ -37,7 +37,7 @@ function activitiesOf(date: string) {
       </div>
       <div class="flex items-center gap-4">
         <button
-          v-if="isAdmin"
+          v-if="canManage"
           class="flex items-center gap-1.5 rounded-full border border-primary px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
           @click="emit('review')"
         >
@@ -61,7 +61,7 @@ function activitiesOf(date: string) {
           :date="date"
           :activities="activitiesOf(date)"
           :totals="lane.day_totals[date]"
-          :is-admin="isAdmin"
+          :can-manage="canManage"
           :can-drag="canDrag"
           @add="emit('add', date)"
           @open="(a) => emit('open', a)"

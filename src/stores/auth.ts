@@ -18,6 +18,10 @@ export const useAuthStore = defineStore('auth', () => {
   const personId = computed(() => claims.value?.person_id ?? '')
   const displayName = computed(() => claims.value?.name ?? '')
   const isAdmin = computed(() => claims.value?.roles?.includes('ADMIN') ?? false)
+  const isFullUser = computed(() => claims.value?.roles?.includes('USER-FULL') ?? false)
+  // Poderes de gestão (clonar, excluir, revisão, edição completa) — ADMIN em qualquer
+  // raia, USER-FULL na própria (o backend garante o escopo)
+  const canManage = computed(() => isAdmin.value || isFullUser.value)
 
   async function login(identifier: string, password: string) {
     const data = await auth.login(identifier, password)
@@ -35,5 +39,5 @@ export const useAuthStore = defineStore('auth', () => {
     claims.value = null
   })
 
-  return { claims, isAuthenticated, personId, displayName, isAdmin, login, logout }
+  return { claims, isAuthenticated, personId, displayName, isAdmin, isFullUser, canManage, login, logout }
 })
