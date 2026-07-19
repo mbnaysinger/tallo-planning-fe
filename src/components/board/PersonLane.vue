@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { NotebookPen } from 'lucide-vue-next'
 import type { Activity, BoardLane } from '@/types'
-import { hoursToHHMM, toISODate, weekDays } from '@/lib/week'
+import { WEEKDAY_LABELS, hoursToHHMM, toISODate, weekDays } from '@/lib/week'
 import DayColumn from './DayColumn.vue'
 
 const props = defineProps<{
@@ -53,6 +53,16 @@ function activitiesOf(date: string) {
     </header>
 
     <div class="hidden w-full lg:block">
+      <!-- Dias da semana dentro do board da pessoa (bug1) -->
+      <div class="grid grid-cols-5 gap-2 px-3 pt-3">
+        <div
+          v-for="label in WEEKDAY_LABELS"
+          :key="label"
+          class="rounded-md border border-border bg-muted/30 py-1.5 text-center text-sm font-semibold"
+        >
+          {{ label }}
+        </div>
+      </div>
       <div class="grid grid-cols-5 gap-2 p-3">
         <DayColumn
           v-for="date in days()"

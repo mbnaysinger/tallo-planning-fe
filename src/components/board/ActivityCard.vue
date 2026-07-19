@@ -43,11 +43,12 @@ const descriptionPreview = computed(() =>
     @click="emit('open')"
   >
     <div class="flex items-start justify-between gap-1">
-      <p class="text-sm font-semibold leading-tight" :class="titleClass">{{ activity.title }}</p>
+      <p class="min-w-0 flex-1 text-sm font-semibold leading-tight line-clamp-2 [overflow-wrap:anywhere]" :class="titleClass">{{ activity.title }}</p>
       <AlertTriangle
         v-if="activity.is_deviation"
         class="h-4 w-4 shrink-0 text-warning"
         aria-label="Desvio de planejamento"
+        tooltip="Desvio de planejamento"
       />
     </div>
 
@@ -55,7 +56,7 @@ const descriptionPreview = computed(() =>
       {{ hoursToHHMM(activity.time_planned) }}/{{ hoursToHHMM(activity.time_executed) }}
     </p>
     <p class="text-[11px] text-muted-foreground">{{ activity.type }}</p>
-    <p v-if="descriptionPreview" class="mt-1 line-clamp-2 text-[11px] text-muted-foreground/80">
+    <p v-if="descriptionPreview" class="mt-1 line-clamp-2 text-[11px] text-muted-foreground/80 [overflow-wrap:anywhere]">
       {{ descriptionPreview }}
     </p>
 

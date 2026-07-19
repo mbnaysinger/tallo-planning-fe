@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { Minus, Plus } from 'lucide-vue-next'
-import { hhmmToHours, hoursToHHMM } from '@/lib/week'
+import { hoursToHHMM } from '@/lib/week'
 
 // Campo hh:mm para tempos em horas decimais.
 // Desktop: setas ↑/↓ ajustam ±15min (paridade com o monolito).
@@ -17,34 +17,59 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: number): void
 }>()
 
-const text = ref(hoursToHHMM(props.modelValue))
+// 00:00 nunca é exibido como valor: o campo fica vazio com placeholder,
+// para o usuário começar a digitar sem precisar apagar
+const text = ref(props.modelValue > 0 ? hoursToHHMM(props.modelValue) : '')
 
 watch(
   () => props.modelValue,
   (v) => {
     // Não reescreve enquanto o usuário digita um valor equivalente
-    if (hhmmToHours(text.value) !== v) text.value = hoursToHHMM(v)
+    if (normalize(text.value) !== v) text.value = v > 0 ? hoursToHHMM(v) : ''
   }
 )
 
-const invalid = computed(() => hhmmToHours(text.value) === null)
+const invalid = computed(() => text.value !== '' && normalize(text.value) === null)
+
+// Entrada parcial é interpretada como se completada: "01" → 01:00, "01:3" → 01:30
+function normalize(raw: string): number | null {
+  const digits = raw.replace(/\D/g, '')
+  if (!digits) return null
+  const hours = Number(digits.slice(0, 2))
+  const minutes = Number((digits.slice(2) + '00').slice(0, 2))
+  if (minutes > 59) return null
+  return hours + minutes / 60
+}
+
+// Máscara: apenas dígitos (máx. 4), ":" automático após os 2 primeiros,
+// e emissão a cada tecla — o formulário reage sem esperar blur/tab
+function onInput(event: Event) {
+  const el = event.target as HTMLInputElement
+  const digits = el.value.replace(/\D/g, '').slice(0, 4)
+  text.value = digits.length <= 2 ? digits : `${digits.slice(0, 2)}:${digits.slice(2)}`
+  el.value = text.value
+
+  const parsed = normalize(text.value)
+  emit('update:modelValue', parsed ?? 0)
+}
 
 function commit() {
-  const hours = hhmmToHours(text.value)
+  const hours = normalize(text.value)
   if (hours !== null) {
     emit('update:modelValue', hours)
-    text.value = hoursToHHMM(hours)
+    text.value = hours > 0 ? hoursToHHMM(hours) : ''
   } else {
-    text.value = hoursToHHMM(props.modelValue)
+    emit('update:modelValue', 0)
+    text.value = props.modelValue > 0 ? hoursToHHMM(props.modelValue) : ''
   }
 }
 
 function step(deltaMinutes: number) {
   if (props.disabled) return
-  const current = hhmmToHours(text.value) ?? props.modelValue
+  const current = normalize(text.value) ?? props.modelValue
   const next = Math.max(0, current + deltaMinutes / 60)
   emit('update:modelValue', next)
-  text.value = hoursToHHMM(next)
+  text.value = next > 0 ? hoursToHHMM(next) : ''
 }
 
 function onKeydown(event: KeyboardEvent) {
@@ -72,11 +97,13 @@ function onKeydown(event: KeyboardEvent) {
         <Minus class="h-3.5 w-3.5" />15
       </button>
       <input
-        v-model="text"
+        :value="text"
         type="text"
         inputmode="numeric"
+        maxlength="5"
         placeholder="00:00"
         :disabled="disabled"
+        @input="onInput"
         class="h-10 w-full rounded-md border bg-background px-3 py-2 text-center text-sm tabular-nums shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         :class="invalid || error ? 'border-destructive focus-visible:ring-destructive/50' : 'border-input focus-visible:ring-primary/50'"
         @blur="commit"

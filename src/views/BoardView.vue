@@ -13,6 +13,7 @@ import DayView from '@/components/board/DayView.vue'
 import BoardSkeleton from '@/components/board/BoardSkeleton.vue'
 import ActivityDetailSheet from '@/components/board/ActivityDetailSheet.vue'
 import ActivityModal from '@/components/modals/ActivityModal.vue'
+import ExecutedTimeModal from '@/components/modals/ExecutedTimeModal.vue'
 import WeeklySummaryModal from '@/components/modals/WeeklySummaryModal.vue'
 
 const router = useRouter()
@@ -112,11 +113,37 @@ async function submitActivity(payload: Partial<Activity> & { collaborator_ids?: 
   if (ok) showActivityModal.value = false
 }
 
+// Concluir exige apontar o tempo executado — intercepta e abre a mini-modal
+const executedActivity = ref<Activity | null>(null)
+const showExecutedModal = ref(false)
+const isConcluding = ref(false)
+
 async function changeStatus(activity: Activity, status: Activity['status']) {
   showDetail.value = false
   // Clicar no status já ativo desfaz a marcação (volta para planejada)
   const next = activity.status === status ? 'planejada' : status
+  if (next === 'concluida') {
+    executedActivity.value = activity
+    showExecutedModal.value = true
+    return
+  }
   await board.updateStatus(activity.id, next)
+}
+
+async function confirmConclude(timeExecuted: number) {
+  if (!executedActivity.value) return
+  isConcluding.value = true
+  const ok = await board.updateStatus(executedActivity.value.id, 'concluida', timeExecuted)
+  isConcluding.value = false
+  if (ok) showExecutedModal.value = false
+}
+
+// Edição rápida do título (canetinha no painel de detalhe) — PATCH otimista
+async function renameActivity(activity: Activity, title: string) {
+  const ok = await board.renameActivity(activity.id, title)
+  if (ok && detailActivity.value?.id === activity.id) {
+    detailActivity.value = { ...detailActivity.value, title }
+  }
 }
 
 async function cloneActivity(activity: Activity) {
@@ -175,22 +202,11 @@ onMounted(async () => {
       @logout="logout"
     />
 
-    <!-- Cabeçalho dos dias (desktop) -->
-    <div class="mt-4 hidden grid-cols-5 gap-2 px-3 lg:grid">
-      <div
-        v-for="label in ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta']"
-        :key="label"
-        class="rounded-md border border-border py-2 text-center text-sm font-semibold"
-      >
-        {{ label }}
-      </div>
-    </div>
-
-    <BoardSkeleton v-if="board.isLoading" class="mt-3" :lanes="2" />
+    <BoardSkeleton v-if="board.isLoading" class="mt-4" :lanes="2" />
 
     <template v-else>
-      <!-- Desktop: raias por pessoa -->
-      <div class="mt-3 hidden space-y-4 lg:block">
+      <!-- Desktop: raias por pessoa (dias da semana dentro de cada board) -->
+      <div class="mt-4 hidden space-y-4 lg:block">
         <PersonLane
           v-for="lane in board.lanes"
           :key="lane.person.id"
@@ -236,6 +252,7 @@ onMounted(async () => {
       :activity="detailActivity"
       :can-manage="auth.canManage"
       @status="(s) => detailActivity && changeStatus(detailActivity, s)"
+      @rename="(t) => detailActivity && renameActivity(detailActivity, t)"
       @edit="detailActivity && openEdit(detailActivity)"
       @clone="detailActivity && cloneActivity(detailActivity)"
       @delete="detailActivity && removeActivity(detailActivity)"
@@ -252,6 +269,13 @@ onMounted(async () => {
       :projects="projects"
       :is-saving="isSaving"
       @submit="submitActivity"
+    />
+
+    <ExecutedTimeModal
+      v-model="showExecutedModal"
+      :activity="executedActivity"
+      :is-saving="isConcluding"
+      @confirm="confirmConclude"
     />
 
     <WeeklySummaryModal

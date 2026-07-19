@@ -211,9 +211,20 @@ export const tallo = {
     }
   },
 
-  async updateActivityStatus(id: string, status: ActivityStatus) {
+  async updateActivityTitle(id: string, title: string) {
     try {
-      const { data } = await talloApi.patch(`/activities/${id}/status`, { status })
+      const { data } = await talloApi.patch(`/activities/${id}/title`, { title })
+      return data as Activity
+    } catch (error) {
+      handleError(error)
+    }
+  },
+
+  async updateActivityStatus(id: string, status: ActivityStatus, timeExecuted?: number) {
+    try {
+      const payload: { status: ActivityStatus; time_executed?: number } = { status }
+      if (timeExecuted !== undefined) payload.time_executed = timeExecuted
+      const { data } = await talloApi.patch(`/activities/${id}/status`, payload)
       return data as Activity
     } catch (error) {
       handleError(error)

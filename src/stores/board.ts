@@ -134,17 +134,37 @@ export const useBoardStore = defineStore('board', () => {
     )
   }
 
-  // Alterna o status com atualização imediata (ação rápida do card)
-  async function updateStatus(activityId: string, status: ActivityStatus) {
+  // Alterna o status com atualização imediata; concluir carrega junto o tempo executado
+  async function updateStatus(activityId: string, status: ActivityStatus, timeExecuted?: number) {
     return optimistic(
       () => {
         const activity = findActivity(activityId)
-        if (activity) activity.status = status
+        if (!activity) return
+        activity.status = status
+        if (timeExecuted !== undefined) {
+          activity.time_executed = timeExecuted
+          const lane = laneOf(activity.person_id)
+          if (lane) recomputeTotals(lane)
+        }
       },
       async () => {
-        await tallo.updateActivityStatus(activityId, status)
+        await tallo.updateActivityStatus(activityId, status, timeExecuted)
       },
       'Falha ao atualizar o status'
+    )
+  }
+
+  // Edição rápida do título via PATCH, com atualização otimista
+  async function renameActivity(activityId: string, title: string) {
+    return optimistic(
+      () => {
+        const activity = findActivity(activityId)
+        if (activity) activity.title = title
+      },
+      async () => {
+        await tallo.updateActivityTitle(activityId, title)
+      },
+      'Falha ao renomear a atividade'
     )
   }
 
@@ -247,6 +267,7 @@ export const useBoardStore = defineStore('board', () => {
     reorderDay,
     moveActivity,
     updateStatus,
+    renameActivity,
     deleteActivity,
     createActivity,
     updateActivity,
